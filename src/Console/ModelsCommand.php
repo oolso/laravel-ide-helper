@@ -796,9 +796,13 @@ class ModelsCommand extends Command
         if ($phpdoc->hasTag('return')) {
             $type = $phpdoc->getTagsByName('return')[0]->getType();
 
-            if (strpos($type, '\\') === 0 && class_exists($type) === false) {
-                $type = substr($type, 1);
-            }
+            $type = collect(explode('|', $type))->map(function (string $type) {
+                if (strpos($type, '\\') === 0 && class_exists($type) === false) {
+                    $type = substr($type, 1);
+                }
+
+                return $type;
+            })->implode('|');
         }
 
         return $type;
