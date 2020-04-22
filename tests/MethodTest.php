@@ -1,8 +1,11 @@
 <?php
 
-namespace Barryvdh\LaravelIdeHelper;
+namespace Barryvdh\LaravelIdeHelper\Tests;
 
-class ExampleTest extends \PHPUnit_Framework_TestCase
+use Barryvdh\LaravelIdeHelper\Method;
+use PHPUnit\Framework\TestCase;
+
+class ExampleTest extends TestCase
 {
     /**
      * Test that we can actually instantiate the class
@@ -32,16 +35,32 @@ class ExampleTest extends \PHPUnit_Framework_TestCase
  *
  * @param string $last
  * @param string $first
+ * @param string $middle
  * @static 
  */';
         $this->assertEquals($output, $method->getDocComment(''));
         $this->assertEquals('setName', $method->getName());
         $this->assertEquals('\\'.ExampleClass::class, $method->getDeclaringClass());
-        $this->assertEquals('$last, $first', $method->getParams(true));
-        $this->assertEquals(['$last', '$first'], $method->getParams(false));
-        $this->assertEquals('$last, $first = \'Barry\'', $method->getParamsWithDefault(true));
-        $this->assertEquals(['$last', '$first = \'Barry\''], $method->getParamsWithDefault(false));
+        $this->assertEquals('$last, $first, ...$middle', $method->getParams(true));
+        $this->assertEquals(['$last', '$first', '...$middle'], $method->getParams(false));
+        $this->assertEquals('$last, $first = \'Barry\', ...$middle', $method->getParamsWithDefault(true));
+        $this->assertEquals(['$last', '$first = \'Barry\'', '...$middle'], $method->getParamsWithDefault(false));
         $this->assertEquals(true, $method->shouldReturn());
+    }
+
+    /**
+     * Test special characters in methods default values
+     */
+    public function testDefaultSpecialChars()
+    {
+        $reflectionClass = new \ReflectionClass(ExampleClass::class);
+        $reflectionMethod = $reflectionClass->getMethod('setSpecialChars');
+
+        $method = new Method($reflectionMethod, 'Example', $reflectionClass);
+        $this->assertEquals('$chars', $method->getParams(true));
+        $this->assertEquals(['$chars'], $method->getParams(false));
+        $this->assertEquals('$chars = \'$\\\'\\\\\'', $method->getParamsWithDefault(true));
+        $this->assertEquals(['$chars = \'$\\\'\\\\\''], $method->getParamsWithDefault(false));
     }
 }
 
@@ -50,8 +69,14 @@ class ExampleClass
     /**
      * @param string $last
      * @param string $first
+     * @param string $middle
      */
-    public function setName($last, $first = 'Barry')
+    public function setName($last, $first = 'Barry', ...$middle)
+    {
+        return;
+    }
+
+    public function setSpecialChars($chars = "\$'\\")
     {
         return;
     }
